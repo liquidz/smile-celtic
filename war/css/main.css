@@ -1,12 +1,24 @@
-body, h1, div, p { margin: 0; padding: 0; }
+body, h1, div, p, ul, ul li { margin: 0; padding: 0; }
 
 body { padding: 20px; }
 a { text-decoration: none; }
+.left { float: left; }
+.right { float: right; }
 
+/* header */
 header { margin-bottom: 20px; }
-h1 { color: #777; font-size: medium; letter-spacing: 10px; }
+#top { overflow: hidden; }
+h1 { font-size: medium; letter-spacing: 10px; }
+h1 a { color: #777; }
 
-#screen { text-align: center; }
+header ul { background: #444; list-style: none; width: 300px; margin-top: 10px; padding: 5px;}
+header ul li { display: inline; }
+header ul li a { padding: 5px 20px 5px 5px; color: #fff; }
+
+
+#screen { text-align: center; overflow: hidden; }
+
+#prev, #next, .movie { float: left; }
 
 #prev, #next { font-size: 100px; }
 
