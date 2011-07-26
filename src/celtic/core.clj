@@ -99,7 +99,8 @@
           [:footer
            [:img {:src "http://code.google.com/appengine/images/appengine-noborder-120x30.gif" :alt "Powered by Google App Engine"}]
            [:img {:src "/img/clojure-logo.png" :alt "Powered by Clojure"}]
-           [:p "Copyright &copy; 2011 " [:a {:href "http://twitter.com/uochan"} "@uochan"] "."]]]]))))
+           [:p [:a {:href "https://github.com/liquidz/smile-celtic"} "ソースコード"]
+            "&nbsp;|&nbsp;Copyright &copy; 2011 " [:a {:href "http://twitter.com/uochan"} "@uochan"] "."]]]]))))
 
 
 (defroutes app-handler
