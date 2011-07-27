@@ -8,6 +8,7 @@
 
 	<static-files>
 		<include path="/favicon.ico" />
+		<include path="/robots.txt" />
 		<include path="/css/**.css" />
 		<include path="/img/**.png" />
 		<include path="/img/**.jpg" />
