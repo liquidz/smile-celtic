@@ -11,6 +11,8 @@ header { margin-bottom: 20px; }
 #top { overflow: hidden; }
 h1 a { text-indent: -10000px; font-size: 0; display: block; width: 215px; height: 17px; background: transparent url(/img/logo.png) no-repeat top left; }
 
+#top p { font-size: 14px; }
+
 header nav { margin-top: 10px; }
 header nav ul { list-style: none; }
 header nav ul li { display: inline; padding-right: 15px; }
@@ -36,7 +38,7 @@ header nav ul li a#dislike_music { background: transparent url(/img/dislike_icon
 #pager { margin-top: 20px; text-align: center; }
 #pager ul { list-style: none; }
 #pager ul li { display: inline; padding: 0 5px; }
-#pager ul li a { color: #fff; padding: 0 5px; background: #ccc; color: #000;
+#pager ul li a { color: #fff; padding: 0 5px; background: #bbb; color: #000;
 	border-radius: 2px;
 	-webkit-border-radius: 2px;
 	-moz-border-radius: 2px;

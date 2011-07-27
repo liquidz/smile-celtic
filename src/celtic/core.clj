@@ -12,6 +12,7 @@
     [appengine-magic.services.user :as du]
     [appengine-magic.services.datastore :as ds]
     [clojure.contrib.string :as string]
+    [clojure.contrib.json :as json]
     ))
 
 (defn- toi [s] (Integer/parseInt s))
@@ -31,14 +32,14 @@
 
   ;; API
   (GET "/set/like" {{key :key} :params}
-    (if (and (not (string/blank? key)) (like key)) "ok" "ng"))
+    (json/json-str (if (and (not (string/blank? key)) (like key)) "ok" "ng")))
   (GET "/set/dislike" {{key :key} :params}
-    (if (and (not (string/blank? key)) (dislike key)) "ok" "ng"))
+    (json/json-str (if (and (not (string/blank? key)) (dislike key)) "ok" "ng")))
 
   (GET "/cancel/like" {{key :key} :params}
-    (if (and (not (string/blank? key)) (delete-like key)) "ok" "ng"))
+    (json/json-str (if (and (not (string/blank? key)) (delete-like key)) "ok" "ng")))
   (GET "/cancel/dislike" {{key :key} :params}
-    (if (and (not (string/blank? key)) (delete-dislike key)) "ok" "ng"))
+    (json/json-str (if (and (not (string/blank? key)) (delete-dislike key)) "ok" "ng")))
 
 
   (not-found "page not found"))

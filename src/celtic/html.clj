@@ -24,10 +24,10 @@
   [:header
    [:div {:id "top"}
     [:h1 {:class "left"} [:a {:href "/"} *title*]]
-    [:p {:class "right"}
-     (if (du/user-logged-in?)
-       (list [:span (.getEmail (du/current-user))] " / " [:a {:href (du/logout-url :destination uri)} "ログアウト"])
-       [:a {:href (du/login-url :destination uri)} "ログイン"])]]
+    [:div {:class "right"}
+     [:p (if (du/user-logged-in?)
+           (list [:span (.getEmail (du/current-user))] " / " [:a {:href (du/logout-url :destination uri)} "ログアウト"])
+           [:a {:href (du/login-url :destination uri)} "ログイン"])]]]
     (if (du/user-logged-in?) (menu basedir))])
 
 (defn footer []
@@ -51,20 +51,26 @@
 (defn to-html5 [v]
   (str "<!DOCTYPE html>" (html v)))
 
+(defn- hidden-pattern [feed]
+  (let [none "display: none;"]
+    (cond
+      (:like feed) {:cancel-like "" :cancel-dislike none :set none}
+      (:dislike feed) {:cancel-like none :cancel-dislike "" :set none}
+      :else {:cancel-like none :cancel-dislike none :set ""})))
+
 (defn video [feed]
-  (let [script (-> feed :key key->script)]
+  (let [script (-> feed :key key->script)
+        hidden (hidden-pattern feed)]
     [:div {:class "movie"}
      script
      (if (du/user-logged-in?)
        [:p
-        (cond
-          (:like feed) [:img {:src "/img/like.png" :class "cancel" :data-key (:key feed) :data-type "like"}]
-          (:dislike feed) [:img {:src "/img/dislike.png" :class "cancel" :data-key (:key feed) :data-type "dislike"}]
-          :else (list
-                  [:img {:src "/img/like.png" :class "set" :data-key (:key feed) :data-type "like" :alt "like"}]
-                  " &nbsp; "
-                  [:img {:src "/img/dislike.png" :class "set" :data-key (:key feed) :data-type "dislike" :alt "dislike"}]
-                  ))])]))
+        [:img {:style (:cancel-like hidden) :src "/img/like.png" :class "cancel" :data-key (:key feed) :data-type "like"}]
+        [:img {:style (:cancel-dislike hidden) :src "/img/dislike.png" :class "cancel" :data-key (:key feed) :data-type "dislike"}]
+        [:span {:style (:set hidden) :data-key (:key feed)}
+         [:img {:src "/img/like.png" :class "set" :data-key (:key feed) :data-type "like" :alt "like"}]
+         " &nbsp; "
+         [:img {:src "/img/dislike.png" :class "set" :data-key (:key feed) :data-type "dislike" :alt "dislike"}]]])]))
 
 (defn- page-uri [page fpp basedir]
   (str basedir "?page=" page "&fpp=" fpp))
