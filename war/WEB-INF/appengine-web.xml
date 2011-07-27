@@ -2,6 +2,9 @@
 
 	<application>smileceltic</application>
 	<version>1</version>
+	<!--
+	<version>test</version>
+	-->
 
 	<static-files>
 		<include path="/favicon.ico" />

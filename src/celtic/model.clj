@@ -11,7 +11,9 @@
 (ds/defentity Like [^:key id email key])
 (ds/defentity Dislike [^:key id email key])
 
-(defn- make-id [email key]
+(defn- make-id
+  "Like, Dislikeのキーとなるidを作成"
+  [email key]
   (sha1str (str email key)))
 
 (defn- get-email []
@@ -32,6 +34,9 @@
   (if-let [email (get-email)]
     (ds/query :kind Like :filter (= :email email) :limit limit :offset (* limit (dec page)))))
 
+(defn count-likes []
+  (ds/query :kind Like :count-only? true))
+
 (defn delete-like [key]
   (if-let [email (get-email)]
     (if-let [target (ds/retrieve Like (make-id email key))]
@@ -45,6 +50,9 @@
 (defn dislike? [key]
   (if-let [email (get-email)]
     (ds/exists? Dislike (make-id email key))))
+
+(defn count-dislikes []
+  (ds/query :kind Dislike :count-only? true))
 
 (defn get-dislikes [& {:keys [limit page] :or {limit *limit*, page 1}}]
   (if-let [email (get-email)]

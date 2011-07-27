@@ -1,26 +1,52 @@
 body, h1, div, p, ul, ul li { margin: 0; padding: 0; }
 
-body { padding: 20px; }
-a { text-decoration: none; }
+body { padding: 20px; background: #000; color: #fff; }
+a { text-decoration: none; color: #aec700; }
+a:hover { color: #6c7714; }
 .left { float: left; }
 .right { float: right; }
 
 /* header */
 header { margin-bottom: 20px; }
 #top { overflow: hidden; }
-h1 { font-size: medium; letter-spacing: 10px; }
-h1 a { color: #777; }
+h1 a { text-indent: -10000px; font-size: 0; display: block; width: 215px; height: 17px; background: transparent url(/img/logo.png) no-repeat top left; }
 
-header ul { background: #444; list-style: none; width: 300px; margin-top: 10px; padding: 5px;}
-header ul li { display: inline; }
-header ul li a { padding: 5px 20px 5px 5px; color: #fff; }
+header nav { margin-top: 10px; }
+header nav ul { list-style: none; }
+header nav ul li { display: inline; padding-right: 15px; }
+header nav ul li a { font-size: small; padding: 5px 0 0 20px; }
+header nav ul li a.now { color: #444; }
+header nav ul li a#home { background: transparent url(/img/home_icon.png) no-repeat left 50%; }
+header nav ul li a#like_music { background: transparent url(/img/like_icon.png) no-repeat left 50%; }
+header nav ul li a#dislike_music { background: transparent url(/img/dislike_icon.png) no-repeat left 50%; }
 
+/* screen */
+#screen { text-align: center; overflow: hidden;
+	width: 80%;
+	margin: 0 auto;
+}
+#screen .movie { float: left; margin-right: 10px; }
 
-#screen { text-align: center; overflow: hidden; }
+#screen img.set, #screen img.cancel { cursor: pointer; }
+#screen img.set { opacity: 0.3; }
+#screen img.set:hover { opacity: 1; }
+#screen img.cancel:hover { opacity: 0.3; }
 
-#prev, #next, .movie { float: left; }
+/* pager */
+#pager { margin-top: 20px; text-align: center; }
+#pager ul { list-style: none; }
+#pager ul li { display: inline; padding: 0 5px; }
+#pager ul li a { color: #fff; padding: 0 5px; background: #ccc; color: #000;
+	border-radius: 2px;
+	-webkit-border-radius: 2px;
+	-moz-border-radius: 2px;
+}
+#pager ul li a:hover { background: #777; }
+#pager ul li a#now { color: #555; background: #000; }
 
-#prev, #next { font-size: 100px; }
+#prev, #next { font-size: x-large; font-weight: bold; color: #fff; padding: 0 10px; }
+#prev:hover, #next:hover { color: #aaa; }
 
+/* footer */
 footer { text-align: right; margin-top: 20px; font-size: small; }
 
