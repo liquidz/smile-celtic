@@ -10,14 +10,16 @@
 
 (def *title* "Smile Celtic Music")
 
-(defn menu [basedir]
-  (let [ls [["/" "トップ" "home"]
-            ["/likes" "好きな曲" "like_music"]
-            ["/dislikes" "嫌いな曲" "dislike_music"]]]
+(defn menu [basedir logged-in?]
+  (let [ls [["/" "トップ" "home" false]
+            ["/likes" "好きな曲" "like_music" true]
+            ["/dislikes" "嫌いな曲" "dislike_music" true]
+            ["/shuffle" "シャッフル" "shuffle" false]]]
     [:nav
      [:ul
-      (map (fn [[uri label id]]
-             [:li [:a {:href uri :id id :class (if (= basedir uri) "now" "_")} label]]
+      (map (fn [[uri label id need-auth?]]
+             (let [li [:li [:a {:href uri :id id :class (if (= basedir uri) "now" "_")} label]]]
+               (if need-auth? (if logged-in? li) li))
              ) ls)]]))
 
 (defn header [& {:keys [uri basedir] :or [uri "/", basedir "/"]}]
@@ -28,7 +30,7 @@
      [:p (if (du/user-logged-in?)
            (list [:span (.getEmail (du/current-user))] " / " [:a {:href (du/logout-url :destination uri)} "ログアウト"])
            [:a {:href (du/login-url :destination uri)} "ログイン"])]]]
-    (if (du/user-logged-in?) (menu basedir))])
+   (menu basedir (du/user-logged-in?))])
 
 (defn footer []
   [:footer
@@ -72,52 +74,66 @@
          " &nbsp; "
          [:img {:src "/img/dislike.png" :class "set" :data-key (:key feed) :data-type "dislike" :alt "dislike"}]]])]))
 
-(defn- page-uri [page fpp basedir]
-  (str basedir "?page=" page "&fpp=" fpp))
+(defn- page-uri [page fpp basedir rsspage]
+  (str basedir "?page=" page "&fpp=" fpp "&rsspage=" rsspage))
 
-(defn- make-page-link [text page fpp basedir & {:keys [id class]}]
-  (let [base {:href (page-uri page fpp basedir)}
+(defn- make-page-link [text page fpp basedir rsspage & {:keys [id class]}]
+  (let [base {:href (page-uri page fpp basedir rsspage)}
         base-with-id (if id (assoc base :id id) base)
         attr (if class (assoc base-with-id :class class) base-with-id)]
     [:a attr text]))
 
-(defn- pager [page fpp total basedir feed-count]
+(defn- pager [page fpp total basedir feed-count rsspage]
   (let [max-page (int (math/ceil (/ total fpp)))]
     [:ul {:id "pager"}
      (if (> page 1)
-       (make-page-link "&laquo;" (dec page) fpp basedir :id "prev"))
-     (map #(vector :li (make-page-link % % fpp basedir :id (if (= % page) "now"))) (range 1 (inc max-page)))
+       (make-page-link "&laquo;" (dec page) fpp basedir rsspage :id "prev"))
+     (map #(vector :li (make-page-link % % fpp basedir rsspage :id (if (= % page) "now"))) (range 1 (inc max-page)))
      (if (and (= feed-count fpp) (not= total (* page fpp)))
-       (make-page-link "&raquo;" (inc page) fpp basedir :id "next"))]))
+       (make-page-link "&raquo;" (inc page) fpp basedir rsspage :id "next"))]))
+
+(defn- rsspager [rsspage fpp]
+  (let [page-max (load-rsspage-max)]
+    [:div {:id "rsspager"} [:span "検索フィード 移動&raquo;"]
+     [:ul (map #(vector :li (make-page-link % 1 fpp "/" %
+                                            :id (if (= % rsspage) "nowrss")
+                                            )) (range 1 (inc page-max)))]]))
 
 (defn- make-html-with-feeds
   "トップページを作成"
-  [feeds page fpp & {:keys [basedir total] :or {basedir "/"}}]
+  [feeds page fpp & {:keys [basedir total rsspage show-rsspager?] :or {basedir "/", rsspage 1, show-rsspager? false}}]
   (let [feed-count (count feeds)
-        uri (page-uri page fpp basedir)]
+        uri (page-uri page fpp basedir rsspage)]
     (to-html5
       (layout
         (header :uri uri :basedir basedir)
         [:div {:id "screen"} (map video feeds)]
-        (if total
-          [:div {:id "pager"} (pager page fpp total basedir feed-count)])
+        (if total (pager page fpp total basedir feed-count rsspage))
+        (if show-rsspager? (rsspager rsspage fpp))
         (footer)))))
 
 (defn make-html
   "トップページを作成"
-  [page fpp]
-  (let [all-feeds (load-search-feed)
+  [& {:keys [page fpp rsspage]}]
+  (let [all-feeds (load-search-feed :page rsspage)
         feeds (take fpp (drop (* (dec page) fpp) all-feeds))]
-    (make-html-with-feeds feeds page fpp :total (count all-feeds))))
+    (make-html-with-feeds feeds page fpp :total (count all-feeds)
+                          :rsspage rsspage :show-rsspager? true)))
 
 (defn make-likes-html
-  [page fpp]
+  [& {:keys [page fpp]}]
   (let [like-keys (map #(assoc % :like true :dislike false) (get-likes :limit fpp :page page))]
     (make-html-with-feeds like-keys page fpp
                           :basedir "/likes" :total (count-likes))))
 
 (defn make-dislikes-html
-  [page fpp]
+  [& {:keys [page fpp]}]
   (let [dislike-keys (map #(assoc % :like false :dislike true) (get-dislikes :limit fpp :page page))]
     (make-html-with-feeds dislike-keys page fpp
                           :basedir "/dislikes" :total (count-dislikes))))
+
+(defn make-shuffle-html
+  [& {:keys [fpp]}]
+  (let [all-feeds (load-search-feed :random-page? true)
+        feeds (map (fn [_] (rand-nth all-feeds)) (range fpp))]
+    (make-html-with-feeds feeds 0 fpp :basedir "/shuffle")))

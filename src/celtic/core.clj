@@ -19,23 +19,25 @@
 
 (defroutes app-handler
   ; fpp: feed per page
-  (GET "/" {{:keys [page fpp] :or {page "1", fpp "3"}} :params}
-    (make-html (toi page) (toi fpp)))
+  (GET "/" {{:keys [page fpp rsspage] :or {page "1", fpp "3", rsspage "1"}} :params}
+    (make-html :page (toi page) :fpp (toi fpp) :rsspage (toi rsspage)))
   (GET "/likes" {{:keys [page fpp] :or {page "1", fpp "3"}} :params}
     (if (du/user-logged-in?)
-      (make-likes-html (toi page) (toi fpp))
+      (make-likes-html :page (toi page) :fpp (toi fpp))
       (redirect "/")))
   (GET "/dislikes" {{:keys [page fpp] :or {page "1", fpp "3"}} :params}
     (if (du/user-logged-in?)
-      (make-dislikes-html (toi page) (toi fpp))
+      (make-dislikes-html :page (toi page) :fpp (toi fpp))
       (redirect "/")))
+  (GET "/shuffle" {{:keys [fpp] :or {fpp "3"}} :params}
+    (make-shuffle-html :fpp (toi fpp)))
+
 
   ;; API
   (GET "/set/like" {{key :key} :params}
     (json/json-str (if (and (not (string/blank? key)) (like key)) "ok" "ng")))
   (GET "/set/dislike" {{key :key} :params}
     (json/json-str (if (and (not (string/blank? key)) (dislike key)) "ok" "ng")))
-
   (GET "/cancel/like" {{key :key} :params}
     (json/json-str (if (and (not (string/blank? key)) (delete-like key)) "ok" "ng")))
   (GET "/cancel/dislike" {{key :key} :params}

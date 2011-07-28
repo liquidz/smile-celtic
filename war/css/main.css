@@ -21,6 +21,7 @@ header nav ul li a.now { color: #444; }
 header nav ul li a#home { background: transparent url(/img/home_icon.png) no-repeat left 50%; }
 header nav ul li a#like_music { background: transparent url(/img/like_icon.png) no-repeat left 50%; }
 header nav ul li a#dislike_music { background: transparent url(/img/dislike_icon.png) no-repeat left 50%; }
+header nav ul li a#shuffle { background: transparent url(/img/shuffle_icon.png) no-repeat left 50%; }
 
 /* screen */
 #screen { text-align: center; overflow: hidden;
@@ -35,19 +36,27 @@ header nav ul li a#dislike_music { background: transparent url(/img/dislike_icon
 #screen img.cancel:hover { opacity: 0.3; }
 
 /* pager */
-#pager { margin-top: 20px; text-align: center; }
-#pager ul { list-style: none; }
-#pager ul li { display: inline; padding: 0 5px; }
-#pager ul li a { color: #fff; padding: 0 5px; background: #bbb; color: #000;
+ul#pager { margin-top: 20px; text-align: center; list-style: none; }
+ul#pager li { display: inline; padding: 0 5px; }
+ul#pager li a { color: #fff; padding: 0 5px; background: #bbb; color: #000;
 	border-radius: 2px;
 	-webkit-border-radius: 2px;
 	-moz-border-radius: 2px;
 }
-#pager ul li a:hover { background: #777; }
-#pager ul li a#now { color: #555; background: #000; }
+ul#pager li a:hover { background: #777; }
+ul#pager li a#now { color: #555; background: #000; }
 
 #prev, #next { font-size: x-large; font-weight: bold; color: #fff; padding: 0 10px; }
 #prev:hover, #next:hover { color: #aaa; }
+
+/* rss pager */
+#rsspager { text-align: right; }
+#rsspager span { font-size: small; font-weight: bold; color: #444; }
+#rsspager ul { list-style: none; opacity: 0; }
+#rsspager:hover ul { opacity: 1; }
+#rsspager ul li { display: inline; }
+#rsspager ul li a { padding: 0 5px; font-size: small; }
+a#nowrss { color: #444; }
 
 /* footer */
 footer { text-align: right; margin-top: 20px; font-size: small; }
