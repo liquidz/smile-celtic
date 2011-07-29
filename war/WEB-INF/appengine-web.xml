@@ -26,4 +26,10 @@
 
 	<threadsafe>true</threadsafe>
 
+	<!-- appstats -->
+	<admin-console>
+		<page name="appstats" url="/appstats/"/>
+	</admin-console>
+
+
 </appengine-web-app>

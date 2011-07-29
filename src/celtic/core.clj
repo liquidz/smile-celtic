@@ -6,7 +6,7 @@
     [ring.middleware.params :only [wrap-params]]
     [ring.middleware.keyword-params :only [wrap-keyword-params]]
     [ring.middleware.session :only [wrap-session]]
-    [celtic html model])
+    [celtic html model smilevideo])
   (:require
     [appengine-magic.core :as ae]
     [appengine-magic.services.user :as du]
@@ -32,6 +32,14 @@
   (GET "/shuffle" {{:keys [fpp] :or {fpp "3"}} :params}
     (make-shuffle-html :fpp (toi fpp)))
 
+;  (GET "/script/:moviekey" {{:keys [moviekey]} :params}
+;    (extscript-with-autoplay (make-extscript-uri moviekey)))
+;
+;  (GET "/movie/:moviekey" {{:keys [moviekey]} :params}
+;    (if-not (string/blank? moviekey)
+;      (make-movie-html moviekey)
+;      (redirect "/")))
+
 
   ;; API
   (GET "/set/like" {{key :key} :params}
@@ -43,6 +51,8 @@
   (GET "/cancel/dislike" {{key :key} :params}
     (json/json-str (if (and (not (string/blank? key)) (delete-dislike key)) "ok" "ng")))
 
+  ;; Cron
+  (GET "/admin/cron/update_total" _ (if (update-total-item-count) "ok" "ng"))
 
   (not-found "page not found"))
 

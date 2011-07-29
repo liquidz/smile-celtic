@@ -8,7 +8,7 @@
     [appengine-magic.services.user :as du]
     [clojure.contrib.generic.math-functions :as math]))
 
-(def *title* "Smile Celtic Music")
+(def TITLE "Smile Celtic Music")
 
 (defn menu [basedir logged-in?]
   (let [ls [["/" "トップ" "home" false]
@@ -25,7 +25,7 @@
 (defn header [& {:keys [uri basedir] :or [uri "/", basedir "/"]}]
   [:header
    [:div {:id "top"}
-    [:h1 {:class "left"} [:a {:href "/"} *title*]]
+    [:h1 {:class "left"} [:a {:href "/"} TITLE]]
     [:div {:class "right"}
      [:p (if (du/user-logged-in?)
            (list [:span (.getEmail (du/current-user))] " / " [:a {:href (du/logout-url :destination uri)} "ログアウト"])
@@ -40,15 +40,21 @@
    [:p [:a {:href "https://github.com/liquidz/smile-celtic"} "ソースコード"]
     "&nbsp;|&nbsp;Copyright &copy; 2011 " [:a {:href "http://twitter.com/uochan"} "@uochan"] "."]])
 
-(defn layout [& body]
+(defn- base-layout [head body]
   [:html
-   [:head
-    [:meta {:charset "utf-8"}]
-    [:link {:rel "stylesheet" :type "text/css" :href "/css/main.css"}]
-    [:script {:type "text/javascript" :src "/js/jquery-1.6.1.min.js"}]
-    [:script {:type "text/javascript" :src "/js/main.js"}]
-    [:title *title*]]
+   [:head [:meta {:charset "utf-8"}] head]
    [:body body]])
+
+(defn layout [& body]
+  (base-layout
+    (list [:link {:rel "stylesheet" :type "text/css" :href "/css/main.css"}]
+          [:script {:type "text/javascript" :src "/js/jquery-1.6.1.min.js"}]
+          [:script {:type "text/javascript" :src "/js/main.js"}]
+          [:title TITLE])
+    body))
+
+(defn simple-layout [body]
+  (base-layout [:title TITLE] body))
 
 (defn to-html5 [v]
   (str "<!DOCTYPE html>" (html v)))
@@ -61,7 +67,7 @@
       :else {:cancel-like none :cancel-dislike none :set ""})))
 
 (defn video [feed]
-  (let [script (-> feed :key key->script)
+  (let [script (-> feed :key key->script-tag)
         hidden (hidden-pattern feed)]
     [:div {:class "movie"}
      script
@@ -93,7 +99,7 @@
        (make-page-link "&raquo;" (inc page) fpp basedir rsspage :id "next"))]))
 
 (defn- rsspager [rsspage fpp]
-  (let [page-max (load-rsspage-max)]
+  (let [page-max (get-rsspage-max)]
     [:div {:id "rsspager"} [:span "検索フィード 移動&raquo;"]
      [:ul (map #(vector :li (make-page-link % 1 fpp "/" %
                                             :id (if (= % rsspage) "nowrss")
@@ -101,7 +107,8 @@
 
 (defn- make-html-with-feeds
   "トップページを作成"
-  [feeds page fpp & {:keys [basedir total rsspage show-rsspager?] :or {basedir "/", rsspage 1, show-rsspager? false}}]
+  [feeds page fpp & {:keys [basedir total rsspage show-rsspager?]
+                     :or {basedir "/", rsspage 1, show-rsspager? false}}]
   (let [feed-count (count feeds)
         uri (page-uri page fpp basedir rsspage)]
     (to-html5
@@ -134,6 +141,11 @@
 
 (defn make-shuffle-html
   [& {:keys [fpp]}]
-  (let [all-feeds (load-search-feed :random-page? true)
+  (let [all-feeds (load-search-feed-randomly)
         feeds (map (fn [_] (rand-nth all-feeds)) (range fpp))]
     (make-html-with-feeds feeds 0 fpp :basedir "/shuffle")))
+
+(defn make-movie-html [key]
+  (to-html5
+    (simple-layout [:script {:type "text/javascript" :src (str "/script/" key)}]))
+  )

@@ -3,17 +3,16 @@
   (:require
     [appengine-magic.services.memcache :as mem]
     [clojure.contrib.string :as string]
+    [clojure.contrib.io :as io]
     [clojure.contrib.zip-filter.xml :as zfx]
     [clojure.contrib.generic.math-functions :as math]))
 
 ; ケルトが聴ケルト聞いての検索フィード
-(def search-uri "http://www.nicovideo.jp/tag/%E3%82%B1%E3%83%AB%E3%83%88%E3%81%8C%E8%81%B4%E3%82%B1%E3%83%AB%E3%83%88%E8%81%9E%E3%81%84%E3%81%A6?rss=2.0")
-(def total-item-key "total-item")
-(def total-feeds-per-page 32)
+(def SEARCH_URI "http://www.nicovideo.jp/tag/%E3%82%B1%E3%83%AB%E3%83%88%E3%81%8C%E8%81%B4%E3%82%B1%E3%83%AB%E3%83%88%E8%81%9E%E3%81%84%E3%81%A6?rss=2.0")
+(def TOTAL_FEEDS_PER_PAGE 32)
 
-(defn- make-search-uri
-  [sort page]
-  (str search-uri
+(defn- make-search-uri [sort page]
+  (str SEARCH_URI
        (if (string/blank? sort) "" (str "&sort=" sort))
        "&page=" page))
 
@@ -29,26 +28,27 @@
       (catch Exception e nil))))
 
 ;; feed操作系
-(defn- get-total-item-count
+(defn- get-feed-total-item-count
   "ニコ動検索結果の総数を取得"
   [zxml]
   (let [desc (first (zfx/xml-> zxml :channel :description zfx/text))]
     (Integer/parseInt (last (re-seq #"\d+" desc)))))
-(defn get-items [zxml]
+(defn get-feed-items [zxml]
   (zfx/xml-> zxml :channel :item))
-(defn _get-data [key zxml] (first (zfx/xml-> zxml key zfx/text)))
-(def get-title (partial _get-data :title))
-(def get-link (partial _get-data :link))
-(def get-date (partial _get-data :date))
-(def get-description (partial _get-data :description))
+(defn _get-feed-data [key zxml] (first (zfx/xml-> zxml key zfx/text)))
+(def get-feed-title (partial _get-feed-data :title))
+(def get-feed-link (partial _get-feed-data :link))
+(def get-feed-date (partial _get-feed-data :date))
+(def get-feed-description (partial _get-feed-data :description))
 
 (defn embeddable?
   "ニコ動情報取得APIから外部プレイヤで再生可能かどうかを取得し返す"
   [key & {:keys [default] :or {default true}}]
-  (let [zxml (load-xml (str "http://ext.nicovideo.jp/api/getthumbinfo/" key))]
-    (if (nil? zxml)
-      default
-      (= "1" (first (zfx/xml-> zxml :thumb :embeddable zfx/text))))))
+  (if (embeddable-exists? key)
+    (get-embeddable key)
+    (if-let [zxml (load-xml (str "http://ext.nicovideo.jp/api/getthumbinfo/" key))]
+      (set-embeddable key (= "1" (first (zfx/xml-> zxml :thumb :embeddable zfx/text))))
+      default)))
 
 (defn get-key
   "ニコ動の動画キー(smXXXXのようなもの)をリンクから取得"
@@ -57,42 +57,49 @@
 (defn item->map
   "検索フィードのzxmlをマップに変換"
   [item]
-  (let [link (get-link item)
+  (let [link (get-feed-link item)
         key (get-key link)]
-    {:title (get-title item)
+    {:title (get-feed-title item)
      :link link
-     :date (get-date item)
-     :description (get-description item)
+     :date (get-feed-date item)
+     :description (get-feed-description item)
      :key key
      :embeddable (embeddable? key)
      :like (like? key)
      :dislike (dislike? key)}))
 
-(defn- update-and-get-total-item-count [& {:keys [zxml uri get?] :or {get? false}}]
-  (if (mem/contains? total-item-key)
-    (if get? (mem/get total-item-key))
-    (let [_zxml (if zxml zxml (if uri (load-xml uri)))
-          total (get-total-item-count _zxml)]
-      (mem/put! total-item-key total)
-      (if get? total))))
+(defn get-latest-total-item-count []
+  (get-feed-total-item-count (load-xml SEARCH_URI)))
 
-(defn load-total-item-count []
-  (update-and-get-total-item-count :uri search-uri :get? true))
+(defn update-total-item-count []
+  (set-total (get-latest-total-item-count)))
 
-(defn load-rsspage-max []
-  (int (math/ceil (/ (load-total-item-count) total-feeds-per-page))))
+(defn get-total-item-count []
+  (if (total-exists?)
+    (get-total)
+    (update-total-item-count)))
 
-(defn load-search-feed
-  "検索フィードから情報を取得"
-  [& {:keys [sort page random-page?] :or {sort "", page "1", random-page? false}}]
-  (if random-page?
-    (load-search-feed :sort sort :page (inc (rand-int (load-rsspage-max))))
-    (let [zxml (load-xml (make-search-uri sort page))]
-      (update-and-get-total-item-count :zxml zxml)
-      (filter :embeddable (remove :dislike (map item->map (get-items zxml)))))))
+(defn get-rsspage-max []
+  (int (math/ceil (/ (get-total-item-count) TOTAL_FEEDS_PER_PAGE))))
 
-(defn key->script
+(defn load-search-feed [& {:keys [sort page] :or {sort "", page 1}}]
+  (let [zxml (load-xml (make-search-uri sort page))]
+    (filter :embeddable (remove :dislike (map item->map (get-feed-items zxml))))))
+
+(defn load-search-feed-randomly [& {:keys [sort] :or {sort ""}}]
+  (let [page (inc (rand-int (get-rsspage-max)))]
+    (load-search-feed :sort sort :page page)))
+
+(defn make-extscript-uri [key & {:keys [width height] :or {width 320 height 265}}]
+  (str "http://ext.nicovideo.jp/thumb_watch/" key "?w=" width "&h=" height))
+
+(defn key->script-tag
   "動画キーから外部プレイヤ呼び出しのscriptタグを作成"
   [key & {:keys [width height] :or {width 320 height 265}}]
   [:script {:type "text/javascript" :src (str "http://ext.nicovideo.jp/thumb_watch/" key "?w=" width "&h=" height)}])
+
+(defn extscript-with-autoplay [uri]
+  (apply str (map #(if (not= -1 (.indexOf % "thumbPlayKey"))
+                     (str % ", fv_autoplay: '1'") %) (io/read-lines uri))))
+
 

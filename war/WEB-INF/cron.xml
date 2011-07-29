@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cronentries>
+	<cron>
+		<url>/admin/cron/update_total</url>
+		<description>update total search item count every 6 hours</description>
+		<schedule>every 6 hours</schedule>
+		<timezone>Asia/Tokyo</timezone>
+	</cron>
+
+	<cron>
+		<url>/_ah/sessioncleanup?clear</url>
+		<description>Clean up sessions</description>
+		<schedule>every 24 hours</schedule>
+		<timezone>Asia/Tokyo</timezone>
+	</cron>
+</cronentries>
