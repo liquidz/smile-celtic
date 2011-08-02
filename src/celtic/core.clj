@@ -19,8 +19,8 @@
 
 (defroutes app-handler
   ; fpp: feed per page
-  (GET "/" {{:keys [page fpp rsspage] :or {page "1", fpp "3", rsspage "1"}} :params}
-    (make-html :page (toi page) :fpp (toi fpp) :rsspage (toi rsspage)))
+  (GET "/" {{:keys [page fpp rsspage latest] :or {page "1", fpp "3", rsspage "1", latest "false"}} :params}
+    (make-html :page (toi page) :fpp (toi fpp) :rsspage (toi rsspage) :latest? (= latest "true")))
   (GET "/likes" {{:keys [page fpp] :or {page "1", fpp "3"}} :params}
     (if (du/user-logged-in?)
       (make-likes-html :page (toi page) :fpp (toi fpp))

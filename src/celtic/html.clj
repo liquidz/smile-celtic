@@ -40,18 +40,24 @@
    [:p [:a {:href "https://github.com/liquidz/smile-celtic"} "ソースコード"]
     "&nbsp;|&nbsp;Copyright &copy; 2011 " [:a {:href "http://twitter.com/uochan"} "@uochan"] "."]])
 
-(defn- base-layout [head body]
+(defn stylesheet [href]
+  (if (sequential? ref) (map stylesheet href)
+    [:link {:rel "stylesheet" :type "text/css" :href href}]))
+(defn javascript [src]
+  (if (sequential? src) (map javascript src)
+    [:script {:type "text/javascript" :src src}]))
+
+(defn- base-layout [head body & {:keys [css js] :or {css (), js ()}}]
   [:html
-   [:head [:meta {:charset "utf-8"}] head]
-   [:body body]])
+   [:head [:meta {:charset "utf-8"}] (stylesheet css) head]
+   [:body body (javascript js)]])
 
 (defn layout [& body]
   (base-layout
-    (list [:link {:rel "stylesheet" :type "text/css" :href "/css/main.css"}]
-          [:script {:type "text/javascript" :src "/js/jquery-1.6.1.min.js"}]
-          [:script {:type "text/javascript" :src "/js/main.js"}]
-          [:title TITLE])
-    body))
+    [:title TITLE]
+    body
+    :css "/css/main.css"
+    :js ["/js/jquery-1.6.1.min.js" "/js/main.js"]))
 
 (defn simple-layout [body]
   (base-layout [:title TITLE] body))
@@ -72,7 +78,7 @@
     [:div {:class "movie"}
      script
      (if (du/user-logged-in?)
-       [:p
+       [:p {:id (:key feed)}
         [:img {:style (:cancel-like hidden) :src "/img/like.png" :class "cancel" :data-key (:key feed) :data-type "like"}]
         [:img {:style (:cancel-dislike hidden) :src "/img/dislike.png" :class "cancel" :data-key (:key feed) :data-type "dislike"}]
         [:span {:style (:set hidden) :data-key (:key feed)}
@@ -121,8 +127,8 @@
 
 (defn make-html
   "トップページを作成"
-  [& {:keys [page fpp rsspage]}]
-  (let [all-feeds (load-search-feed :page rsspage)
+  [& {:keys [page fpp rsspage latest?]}]
+  (let [all-feeds (load-search-feed :page rsspage :update? latest?)
         feeds (take fpp (drop (* (dec page) fpp) all-feeds))]
     (make-html-with-feeds feeds page fpp :total (count all-feeds)
                           :rsspage rsspage :show-rsspager? true)))

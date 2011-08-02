@@ -18,8 +18,8 @@
 
 (defn load-xml
   "uriからXMLをzxmlとして取得。ニコ動への負荷を考慮してcacheも保持"
-  [uri]
-  (if (mem/contains? uri)
+  [uri & {:keys [update?] :or {update? false}}]
+  (if (and (mem/contains? uri) (not update?))
     (mem/get uri)
     (try
       (let [res (clojure.zip/xml-zip (clojure.xml/parse uri))]
@@ -65,8 +65,10 @@
      :description (get-feed-description item)
      :key key
      :embeddable (embeddable? key)
-     :like (like? key)
-     :dislike (dislike? key)}))
+     :like-or-dislike? (or (like? key) (dislike? key))
+     ;:like (like? key)
+     ;:dislike (dislike? key)
+     }))
 
 (defn get-latest-total-item-count []
   (get-feed-total-item-count (load-xml SEARCH_URI)))
@@ -82,9 +84,9 @@
 (defn get-rsspage-max []
   (int (math/ceil (/ (get-total-item-count) TOTAL_FEEDS_PER_PAGE))))
 
-(defn load-search-feed [& {:keys [sort page] :or {sort "", page 1}}]
-  (let [zxml (load-xml (make-search-uri sort page))]
-    (filter :embeddable (remove :dislike (map item->map (get-feed-items zxml))))))
+(defn load-search-feed [& {:keys [sort page update?] :or {sort "", page 1, update? false}}]
+  (let [zxml (load-xml (make-search-uri sort page) :update? update?)]
+    (filter :embeddable (remove :like-or-dislike? (map item->map (get-feed-items zxml))))))
 
 (defn load-search-feed-randomly [& {:keys [sort] :or {sort ""}}]
   (let [page (inc (rand-int (get-rsspage-max)))]
